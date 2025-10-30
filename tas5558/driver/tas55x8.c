@@ -56,15 +56,34 @@ static int tas55x8_register_size(struct device *dev, unsigned int reg)
 	case CLOCK_CONTROL_REG ... DELAY_CH8_BD_MODE_REG:
 		return 1;
 	case BANK_SWITCHING_CMD_REG ... CH8_BQ2_REG :
-	case tas55x8_PWM_OUTPUT_MUX:
+	case LOUDNESS_LOG2_GAIN_REG:
+	case LOUDNESS_GAIN_REG ... LOUDNESS_OFFSET_REG:
+	case DRC1_CONTROL_REG ... DRC2_CONTROL_REG:
+	case ENERGY_MANAGER_WEIGHTING_CH1_REG ... ENERGY_MANAGER_LOW_THRESHOLD_SUBWOOFER_REG:
+	case ASRC_STATUS_REG  ... ASRC_MODE_CONTROL_REG:
+	case AUTO_MUTE_BEHAVIOUR:
+	case VOLUME_TREBLE_BASS_SLEW_RATES_REG ... GENERAL_CONTROL_REG:
+	case R_DOLBY_COEFLR_REG ... THD_MANAGER_POST_REG:
+	case KHZ192_IMAGE_SELECT_REG:
 		return 4;
-	case :
+	case DRC1_ENERGY_REG ... DRC1_THRESHOLD_REG:
+	case DRC1_OFFSET_REG:
+	case DRC2_ENERGY_REG ... DRC2_THRESHOLD_REG:
+	case DRC2_OFFSET_REG:
+	case RC_BYPASS1_REG ... OUTPUT_TO_PWM6_REG:
+	case SDIN5_INPUT1_MIX_REG ... SDIN5_INPUT8_MIX_REG:
 		return 8;
-	case :
+	case DRC1_SLOPE_REG:
+	case DRC2_SLOPE_REG:
+	case OUTPUT_TO_PWM7_REG ... OUTPUT_TO_PWM8_REG:
 		return 12;
-	case :
+	case DRC1_ATTACK_DECAY_REG:
+	case DRC2_ATTACK_DECAY_REG:
+	case ENERGY_MANAGER_AVERAGING_REG:
+	case KHZ192_PROCESS_FLOW_OUTPUT_MIX1_REG ... KHZ192_PROCESS_FLOW_OUTPUT_MIX4_REG:
+	case KHZ192_DOLBY_DOWNMIX_COEF1_REG ... KHZ192_DOLBY_DOWNMIX_COEF2_REG:
 		return 16;
-	case :
+	case PSVC_VOLUME_BIQUAD:
 		return 20;
 	}
 
@@ -75,9 +94,15 @@ static int tas55x8_register_size(struct device *dev, unsigned int reg)
 static bool tas55x8_accessible_reg(struct device *dev, unsigned int reg)
 {
 	switch (reg) {
-	case 0x0f:
-	case 0x11 ... 0x17:
-	case 0x1d ... 0x1f:
+	case 0xbf:
+	case 0xc0 ... 0xc2:
+	case 0xc6 ... 0xcb:
+	case 0xcd ... 0xce:
+	case 0xe1 ... 0xe2:
+	case 0xeb:
+	case 0xf8 ... 0xf9:
+	case 0xfd:
+	case 0xff:
 		return false;
 	default:
 		return true;
