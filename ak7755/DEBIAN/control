@@ -1,0 +1,9 @@
+Package: ak7755driver
+Version: 1.0.0
+Section: free
+Priority: optional
+Essential: no
+Architecture: aarch64
+Maintainer: Roy <123456@qq.com>
+Provides: RoyStudio
+Description: AK7755Driver
