@@ -50,6 +50,10 @@ static const struct reg_default tas55x8_reg_defaults[] = {
                     0x07: Set back-end reset period 800 ms. */
 }
 
+struct reg_value{
+	unsigned uint8_t value[20];
+}
+
 static int tas55x8_register_size(struct device *dev, unsigned int reg)
 {
 	switch (reg) {
@@ -112,8 +116,8 @@ static bool tas55x8_accessible_reg(struct device *dev, unsigned int reg)
 static bool tas55x8_volatile_reg(struct device *dev, unsigned int reg)
 {
 	switch (reg) {
-	case tas55x8_DEV_ID:
-	case tas55x8_ERROR_STATUS:
+	case GENERAL_STATUS_REG:
+	case ERROR_STATUS_REG:
 		return true;
 	}
 
@@ -122,7 +126,7 @@ static bool tas55x8_volatile_reg(struct device *dev, unsigned int reg)
 
 static bool tas55x8_writeable_reg(struct device *dev, unsigned int reg)
 {
-	return tas55x8_accessible_reg(dev, reg) && (reg != tas55x8_DEV_ID);
+	return tas55x8_accessible_reg(dev, reg) && (reg != GENERAL_STATUS_REG);
 }
 
 static int tas55x8_reg_write(void *context, unsigned int reg,
@@ -130,10 +134,12 @@ static int tas55x8_reg_write(void *context, unsigned int reg,
 {
 	struct i2c_client *client = context;
 	unsigned int i, size;
-	uint8_t buf[5];
 	int ret;
 
 	size = tas55x8_register_size(&client->dev, reg);
+
+	uint8_t buf[(size+1)];
+
 	if (size == 0)
 		return -EINVAL;
 
@@ -157,13 +163,15 @@ static int tas55x8_reg_read(void *context, unsigned int reg,
 			     unsigned int *value)
 {
 	struct i2c_client *client = context;
-	uint8_t send_buf, recv_buf[4];
 	struct i2c_msg msgs[2];
 	unsigned int size;
 	unsigned int i;
 	int ret;
 
 	size = tas55x8_register_size(&client->dev, reg);
+
+	uint8_t send_buf, recv_buf[size];
+
 	if (size == 0)
 		return -EINVAL;
 
@@ -200,7 +208,8 @@ static const char * const supply_names[] = {
 };
 
 struct tas55x8_private {
-	struct regmap	*regmap;
+	//struct regmap	*regmap;
+	struct reg_value *regvalue[255];
 	unsigned int	mclk, sclk;
 	unsigned int	format;
 	bool		deemph;
@@ -213,7 +222,7 @@ struct tas55x8_private {
 	struct		regulator_bulk_data supplies[ARRAY_SIZE(supply_names)];
 };
 
-static int tas55x8_deemph[] = { 0, 32000, 44100, 48000 };
+static int tas55x8_deemph[] = { 0, 32000, 44100, 48000, 88200, 96000, 176400, 192000};
 
 static int tas55x8_set_deemph(struct snd_soc_component *component)
 {
@@ -263,10 +272,10 @@ static int tas55x8_set_dai_sysclk(struct snd_soc_dai *codec_dai,
 	struct tas55x8_private *priv = snd_soc_component_get_drvdata(component);
 
 	switch (clk_id) {
-	case tas55x8_CLK_IDX_MCLK:
+	case tas55x8_CLK_IDX_MCLK: // tas55x8_CLK_IDX_MCLK = 0
 		priv->mclk = freq;
 		break;
-	case tas55x8_CLK_IDX_SCLK:
+	case tas55x8_CLK_IDX_SCLK: //tas55x8_CLK_IDX_SCLK = 1
 		priv->sclk = freq;
 		break;
 	}
@@ -384,9 +393,9 @@ static int tas55x8_hw_params(struct snd_pcm_substream *substream,
 
 	/* ... then add the offset for the sample bit depth. */
 	switch (params_width(params)) {
-        case 16:
+    case 16:
 		val += 0;
-                break;
+        break;
 	case 20:
 		val += 1;
 		break;
@@ -862,8 +871,8 @@ MODULE_DEVICE_TABLE(i2c, tas55x8_i2c_id);
 
 static const struct regmap_config tas55x8_regmap = {
 	.reg_bits		= 8,
-	.val_bits		= 32,
-	.max_register		= tas55x8_MAX_REGISTER,
+	.val_bits		= 32, //4 bytes, or 5 * 4 Bytes = 20 Bytes = 160 bits
+	.max_register		= MAX_REGISTER,
 	.reg_defaults		= tas55x8_reg_defaults,
 	.num_reg_defaults	= ARRAY_SIZE(tas55x8_reg_defaults),
 	.cache_type		= REGCACHE_RBTREE,
