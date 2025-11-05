@@ -130,7 +130,7 @@ static bool tas55x8_writeable_reg(struct device *dev, unsigned int reg)
 }
 
 static int tas55x8_reg_write(void *context, unsigned int reg,
-			      unsigned int value)
+			      struct reg_value value)
 {
 	struct i2c_client *client = context;
 	unsigned int i, size;
@@ -145,9 +145,13 @@ static int tas55x8_reg_write(void *context, unsigned int reg,
 
 	buf[0] = reg;
 
-	for (i = size; i >= 1; --i) {
-		buf[i] = value;
-		value >>= 8;
+	// for (i = size; i >= 1; --i) {
+	// 	buf[i] = value;
+	// 	value >>= 8;
+	// }
+
+	for(i = 1; i <= size + 1; i++){
+		buf[i] = value.value[i-1];
 	}
 
 	ret = i2c_master_send(client, buf, size + 1);
@@ -160,7 +164,7 @@ static int tas55x8_reg_write(void *context, unsigned int reg,
 }
 
 static int tas55x8_reg_read(void *context, unsigned int reg,
-			     unsigned int *value)
+			     struct reg_value *regvalue)
 {
 	struct i2c_client *client = context;
 	struct i2c_msg msgs[2];
@@ -193,11 +197,13 @@ static int tas55x8_reg_read(void *context, unsigned int reg,
 	else if (ret != ARRAY_SIZE(msgs))
 		return -EIO;
 
-	*value = 0;
+	//*value = 0;
 
 	for (i = 0; i < size; i++) {
-		*value <<= 8;
-		*value |= recv_buf[i];
+		//*value <<= 8;
+		//*value |= recv_buf[i];
+		*value.value[i] = 0;
+		*value.value[i] = recv_buf[i];
 	}
 
 	return 0;
@@ -222,7 +228,7 @@ struct tas55x8_private {
 	struct		regulator_bulk_data supplies[ARRAY_SIZE(supply_names)];
 };
 
-static int tas55x8_deemph[] = { 0, 32000, 44100, 48000, 88200, 96000, 176400, 192000};
+static int tas55x8_deemph[] = { 0, 32000, 44100, 48000 };
 
 static int tas55x8_set_deemph(struct snd_soc_component *component)
 {
