@@ -301,6 +301,8 @@
 #define SPECIAL_REG                        0xFE;
 #define RESERVED28                         0xFF;
 
+#define MAX_REGISTER                 RESERVED28;
+
     //Clock Control Register Masks
 #define DATA_RATE_MASK         0xE0;
 #define DATA_RATE_32KHZ        0x00;

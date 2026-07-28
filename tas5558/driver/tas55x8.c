@@ -50,10 +50,6 @@ static const struct reg_default tas55x8_reg_defaults[] = {
                     0x07: Set back-end reset period 800 ms. */
 }
 
-struct reg_value{
-	unsigned uint8_t value[20];
-}
-
 static int tas55x8_register_size(struct device *dev, unsigned int reg)
 {
 	switch (reg) {
@@ -98,8 +94,12 @@ static int tas55x8_register_size(struct device *dev, unsigned int reg)
 static bool tas55x8_accessible_reg(struct device *dev, unsigned int reg)
 {
 	switch (reg) {
-	case 0xbf:
-	case 0xc0 ... 0xc2:
+	case 0x11:
+	case 0x13:
+	case 0x1a:
+	case 0x26:
+	case 0x28 ... 0x2F:
+	case 0xbf ... 0xc2:
 	case 0xc6 ... 0xcb:
 	case 0xcd ... 0xce:
 	case 0xe1 ... 0xe2:
@@ -118,6 +118,7 @@ static bool tas55x8_volatile_reg(struct device *dev, unsigned int reg)
 	switch (reg) {
 	case GENERAL_STATUS_REG:
 	case ERROR_STATUS_REG:
+	case BANK_SWITCHING_CMD_REG ... RESERVED28:
 		return true;
 	}
 
@@ -214,8 +215,7 @@ static const char * const supply_names[] = {
 };
 
 struct tas55x8_private {
-	//struct regmap	*regmap;
-	struct reg_value *regvalue[255];
+	struct regmap	*regmap;
 	unsigned int	mclk, sclk;
 	unsigned int	format;
 	bool		deemph;
@@ -877,7 +877,7 @@ MODULE_DEVICE_TABLE(i2c, tas55x8_i2c_id);
 
 static const struct regmap_config tas55x8_regmap = {
 	.reg_bits		= 8,
-	.val_bits		= 32, //4 bytes, or 5 * 4 Bytes = 20 Bytes = 160 bits
+	.val_bits		= 8, //4 bytes, or 5 * 4 Bytes = 20 Bytes = 160 bits
 	.max_register		= MAX_REGISTER,
 	.reg_defaults		= tas55x8_reg_defaults,
 	.num_reg_defaults	= ARRAY_SIZE(tas55x8_reg_defaults),
